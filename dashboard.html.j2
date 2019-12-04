@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <style>
+    html {
+        background-color: #181712;
+        color: #f0f0f0;
+        font-family: monospace;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    table, td {
+        border: 1px solid rgba(85, 85, 85, 0.3);
+        background-color: #75757117;
+        color: #ffffff;
+        padding: 7px 12px 7px 12px;
+    }
+
+    th {
+        font: all-small-caps lighter 14px monospace;
+        border-bottom: 2px solid rgba(85, 85, 85, 1);
+        background-color: #b0aba0;
+        color: black;
+    }
+
+    table.metaData td:first-child {
+        font-size: 150%;
+        background-color: teal;
+        width: 20%;
+    }
+  </style>
+</head>
+<body>
+  {% if geo %}
+  Location: {{ geo }}
+  {% endif %}
+
+  {% if geo_wlan %}
+  Location (WLAN): {{ geo_wlan }}
+  {% endif %}
+
+  {% if tables %}
+    {% for table in tables %}
+        <table class="metaData">
+            <tr>
+                {% for data in table['meta'].values() %}
+                    <td>{{ data }}</td>
+                {% endfor %}
+            </tr>
+        </table>
+
+        <table class="dumpData">
+            <tr>
+                {% for header in table['dump']['headers'] %}
+                    <th>{{ header }}</th>
+                {% endfor %}
+            </tr>
+
+            {% for row in table['dump']['rows'] %}
+                <tr>
+                    {% for data in row %}
+                        <td>{{ data }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+        <br>
+    {% endfor %}
+  {% endif %}
+
+</body>
+</html>
