@@ -38,32 +38,21 @@
   </style>
 </head>
 <body>
-  {% if geo %}
-  Location: {{ geo }}
-  {% endif %}
-
-  {% if geo_wlan %}
-  Location (WLAN): {{ geo_wlan }}
-  {% endif %}
-
-  {% if tables %}
-    {% for table in tables %}
+    {% for tname, table in dumps.items() %}
         <table class="metaData">
             <tr>
-                {% for data in table['meta'].values() %}
-                    <td>{{ data }}</td>
-                {% endfor %}
+                <td>{{ tname }}</td>
             </tr>
         </table>
 
         <table class="dumpData">
             <tr>
-                {% for header in table['dump']['headers'] %}
+                {% for header in table['headers'] %}
                     <th>{{ header }}</th>
                 {% endfor %}
             </tr>
 
-            {% for row in table['dump']['rows'] %}
+            {% for row in table['rows'] %}
                 <tr>
                     {% for data in row %}
                         <td>{{ data }}</td>
@@ -73,7 +62,5 @@
         </table>
         <br>
     {% endfor %}
-  {% endif %}
-
 </body>
 </html>
