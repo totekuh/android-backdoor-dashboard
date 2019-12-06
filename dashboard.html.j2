@@ -18,11 +18,26 @@
 
     table, td {
         border: 1px solid rgba(85, 85, 85, 0.3);
-        background-color: #75757117;
+        background-color: rgba(117, 117, 113, 0.1);
         color: #ffffff;
         padding: 7px 12px 7px 12px;
     }
 
+    table.dumpData td:not(:empty){
+        -webkit-animation: fadeinout 2s linear forwards;
+        animation: fadeinout 2s linear forwards;
+    }
+
+    @-webkit-keyframes fadeinout {
+        0% { background-color: rgba(117, 117, 113, 0.7); }
+        100% { background-color: rgba(117, 117, 113, 0.1); }
+    }
+
+    @keyframes fadeinout {
+        0% { background-color: rgba(117, 117, 113, 0.7); }
+        100% { background-color: rgba(117, 117, 113, 0.1); }
+    }
+    
     th {
         font: all-small-caps lighter 14px monospace;
         border-bottom: 2px solid rgba(85, 85, 85, 1);
@@ -45,7 +60,7 @@
             </tr>
         </table>
 
-        <table class="dumpData">
+        <table id="{{ tname }}" class="dumpData">
             <tr>
                 {% for header in table['headers'] %}
                     <th>{{ header }}</th>
@@ -62,5 +77,50 @@
         </table>
         <br>
     {% endfor %}
+    <script>
+    var knownRows = {"sms": [], "calls": [], "contacts": []};
+    window.onload = updateDashboard();
+
+    function updateDashboard() {
+        var url = {{ url_for('update')|tojson }};
+        console.log("I know:");
+        console.log(knownRows);
+        fetch(url, {
+            method: 'POST',
+            body: JSON.stringify(knownRows)
+        })
+        .then(parseJSON)
+        .then(addNewRows);
+        setTimeout(updateDashboard, 0.3 * 1000);
+    };
+
+    function parseJSON(response) {
+        r = response.json();
+        console.log("Received response:");
+        console.log(r);
+        return r
+    };
+
+    function addNewRows(newRows) {
+        console.log("I got:");
+        console.log(newRows);
+        var addRows = {"sms": [], "calls": [], "contacts": []};
+        addRows["sms"] = newRows["sms"]["rows"].filter(x => !knownRows["sms"].includes(x[0])); // might be redundant because backend should filter out knownRows
+        addRows["sms"].forEach(row => knownRows["sms"].push(row[0]));
+        
+        var table = document.getElementById("sms");
+        addRows["sms"].forEach(function(row) {
+            var rowView = table.insertRow(1);
+            var cellPos = 0;
+            row.forEach(function(cellValue) {
+                var cellView = rowView.insertCell(cellPos);
+                cellView.innerHTML = cellValue;
+                cellPos++;
+            })
+        });
+        console.log("Now I know:");
+        console.log(knownRows);
+    };
+    </script>
 </body>
 </html>
