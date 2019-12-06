@@ -24,7 +24,6 @@ def dump_parse_save_unique(requested_dumps):
         meta = {
             'DumpType': dump_type
         }
-        # headers = []
         dump = {}
         try:
             with open(app.config['DUMP_DIRECTORY_PATH'] / f"{dump_type}.txt", 'r', encoding='utf-8') as dump_f:
@@ -38,8 +37,6 @@ def dump_parse_save_unique(requested_dumps):
                         elif idx:
                             key, value = [s.strip() for s in line.split(":", maxsplit=1)]
                             dump[idx][key] = value
-                            # if key not in headers:
-                            #     headers.append(key)
                         elif ":" in line:
                             key, value = [s.strip() for s in line.split(":", maxsplit=1)]
                             meta[key] = value
