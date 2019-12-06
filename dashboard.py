@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sqlite3
+from pathlib import Path
 
 from flask import Flask, jsonify, render_template, redirect, request, url_for
 from flask_apscheduler import APScheduler
@@ -7,6 +8,7 @@ from flask_apscheduler import APScheduler
 
 class Config(object):
     SCHEDULER_API_ENABLED = True
+    DUMP_DIRECTORY_PATH = Path('/home/retr0/Desktop/dump')
     DB = "dump.db"
 
 
@@ -17,14 +19,15 @@ app.config.from_object(Config())
 
 def dump_parse_save_unique(requested_dumps):
     # insert meterpreter dump here
-
     # after the dumps are done, they will be picked up
     for dump_type in requested_dumps:
-        meta = {'DumpType': dump_type}
+        meta = {
+            'DumpType': dump_type
+        }
         # headers = []
         dump = {}
         try:
-            with open(f"dump/{dump_type}.txt", 'r', encoding='utf-8') as dump_f:
+            with open(app.config['DUMP_DIRECTORY_PATH'] / f"{dump_type}.txt", 'r', encoding='utf-8') as dump_f:
                 idx = None
                 while True:
                     line = next(dump_f).strip()
@@ -46,7 +49,7 @@ def dump_parse_save_unique(requested_dumps):
                 for row in dump:
                     sql_insert(conn, dump_type, row)
         except FileNotFoundError:
-            print("")
+            pass
 
 
 def sanitize(query: str):
@@ -135,10 +138,10 @@ def update():
 
 
 # don't put these into "ifmain"
+
 scheduler.init_app(app)
 scheduler.start()
 scheduler.run_job('dump_update')
-
 
 if __name__ == '__main__':
     app.run(debug=True)
