@@ -8,7 +8,7 @@ from flask_apscheduler import APScheduler
 
 class Config(object):
     SCHEDULER_API_ENABLED = True
-    DUMP_DIRECTORY_PATH = Path("dump")
+    DUMP_DIRECTORY_PATH = Path("dump")  # don't forget to change this
     DB = "dump.db"
 
 
