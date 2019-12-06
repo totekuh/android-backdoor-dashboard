@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 import sqlite3
+from pathlib import Path
 
-from flask import Flask, render_template, redirect, url_for
+from flask import Flask, redirect, render_template, url_for
 from flask_apscheduler import APScheduler
 
 
 class Config(object):
     SCHEDULER_API_ENABLED = True
+    DUMP_DIRECTORY_PATH = Path('/home/retr0/Desktop/dump')
     DB = "dump.db"
 
 
@@ -17,14 +19,15 @@ app.config.from_object(Config())
 
 def dump_parse_save_unique(requested_dumps):
     # insert meterpreter dump here
-
     # after the dumps are done, they will be picked up
     for dump_type in requested_dumps:
-        meta = {'DumpType': dump_type}
+        meta = {
+            'DumpType': dump_type
+        }
         # headers = []
         dump = {}
         try:
-            with open(f"{dump_type}.txt", 'r', encoding='utf-8') as dump_f:
+            with open(app.config['DUMP_DIRECTORY_PATH'] / f"{dump_type}.txt", 'r', encoding='utf-8') as dump_f:
                 idx = None
                 while True:
                     line = next(dump_f).strip()
@@ -45,6 +48,8 @@ def dump_parse_save_unique(requested_dumps):
             with sqlite3.connect(app.config['DB']) as conn:
                 for row in dump:
                     sql_insert(conn, dump_type, row)
+        except FileNotFoundError:
+            pass
 
 
 def sanitize(query: str):
@@ -55,8 +60,11 @@ def sql_insert(conn, table, row_dict):
     table = sanitize(table)
     headers = [sanitize(k).lower() for k in row_dict.keys()]
     data_placeholders = [f":{sanitize(k)}" for k in row_dict.keys()]
-    conditions = " AND ".join(f"{header} ={data_placeholder}" for header, data_placeholder in zip(headers, data_placeholders))
-    marked_up_query = f"INSERT INTO {table} ({', '.join(headers)}) SELECT {', '.join(data_placeholders)} WHERE NOT EXISTS(SELECT 1 FROM {table} WHERE {conditions});"
+    conditions = " AND ".join(
+                f"{header} ={data_placeholder}" for header, data_placeholder in zip(headers, data_placeholders))
+    marked_up_query = f"INSERT INTO {table} " \
+        f"({', '.join(headers)}) " \
+        f"SELECT {', '.join(data_placeholders)} WHERE NOT EXISTS(SELECT 1 FROM {table} WHERE {conditions});"
     conn.execute(marked_up_query, row_dict)
 
 
@@ -75,6 +83,7 @@ def sql_load(requested_dumps):
             cur.execute(f"SELECT * FROM {table_name};")
             dumps[table_name]['rows'] = cur.fetchall()
     return dumps
+
 
 @scheduler.task('interval', id='dump_update', seconds=10, misfire_grace_time=900)
 def dump_update():
@@ -100,10 +109,10 @@ def dashboard():
 
 
 # don't put these into "ifmain"
+
 scheduler.init_app(app)
 scheduler.start()
 scheduler.run_job('dump_update')
-
 
 if __name__ == '__main__':
     app.run(debug=True)
